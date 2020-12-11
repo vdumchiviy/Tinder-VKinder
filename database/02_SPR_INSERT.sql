@@ -1,0 +1,18 @@
+insert into spr_user_states(user_state_id, user_state_nm) values (0, 'waiting main commands');
+insert into spr_user_states(user_state_id, user_state_nm) values (1, 'waiting for one age numbers');
+insert into spr_user_states(user_state_id, user_state_nm) values (2, 'waiting for from age numbers');
+insert into spr_user_states(user_state_id, user_state_nm) values (3, 'waiting for to age numbers');
+insert into spr_user_states(user_state_id, user_state_nm) values (5, 'waiting for sex numbers');
+insert into spr_user_states(user_state_id, user_state_nm) values (8, 'waiting for relation numbers');
+insert into spr_relations(relation_id, relation_nm) values (0,'not specified');
+insert into spr_relations(relation_id, relation_nm) values (1,'single');
+insert into spr_relations(relation_id, relation_nm) values (2,'in a relationship');
+insert into spr_relations(relation_id, relation_nm) values (3,'engaged');
+insert into spr_relations(relation_id, relation_nm) values (4,'married');
+insert into spr_relations(relation_id, relation_nm) values (5,'it''s complicated');
+insert into spr_relations(relation_id, relation_nm) values (6,'actively searching');
+insert into spr_relations(relation_id, relation_nm) values (7,'in love');
+insert into spr_relations(relation_id, relation_nm) values (8,'in a civil union');
+insert into spr_sexes(sex_id, sex_nm) values (0, 'not specified');
+insert into spr_sexes(sex_id, sex_nm) values (1, 'female');
+insert into spr_sexes(sex_id, sex_nm) values (2, 'male');

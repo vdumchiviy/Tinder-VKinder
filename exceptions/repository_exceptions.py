@@ -1,0 +1,2 @@
+class VKinderModeNotFoundException(Exception):
+    pass

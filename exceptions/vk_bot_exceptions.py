@@ -1,0 +1,3 @@
+
+class VKBotNoTokenGiven(Exception):
+    pass
