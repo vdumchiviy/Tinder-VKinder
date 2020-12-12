@@ -1,5 +1,4 @@
 import pytest
-
 import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(
@@ -18,7 +17,8 @@ class TestVKBot():
         self.vk_bot = self.VK_Bot(self.token)
 
     def test_new_user(self):
-        assert self.vk_bot._check_new_user(35163310) == True
+        expected = True
+        assert self.vk_bot._check_new_user(35163310) == expected
 
 
 # if __name__ == "__main__":
