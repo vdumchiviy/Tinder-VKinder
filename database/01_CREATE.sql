@@ -37,17 +37,18 @@ CREATE TABLE IF NOT EXISTS vkinder_search_user
 CREATE TABLE IF NOT EXISTS vkinder_search_conditions
 (
 	id serial primary key, --record id
-	id_search_user integer REFERENCES vkinder_search_user(id), --the user from whom the search will be conducted 
+	id_search_user integer REFERENCES vkinder_search_user(vk_id), --the user from whom the search will be conducted 
 	city varchar(100), --city
 	age_range int4range,  --age range
 	sex integer REFERENCES spr_sexes(sex_id), --sex id of user 
-	relation integer REFERENCES spr_relations(relation_id) --relation
+	relation integer REFERENCES spr_relations(relation_id), --relation
+	is_open boolean default True -- condition now in use
 );
 --the user was founded 
 CREATE TABLE IF NOT EXISTS vkinder_pair
 (
 	id serial primary key, -- record id
-	id_search_user integer REFERENCES vkinder_search_user(id), --the user from whom the search will be conducted 
+	id_search_user integer REFERENCES vkinder_search_user(vk_id), --the user from whom the search will be conducted 
 	id_pair integer, --id VKontakte (pair)
 	first_name varchar(100), --pair's Family name
 	second_name varchar(100), --pair's name
