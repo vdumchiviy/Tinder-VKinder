@@ -126,3 +126,21 @@ class TestDBRepository():
         with pytest.raises(self.VKinderCannotUpdateSearchConditions) as e_info:
             assert expected == repository.add_search_condition(
                 user_id, "age", 1.5)
+
+    def test_add_search_condition_age_from_succesfull(self):
+        user_id = 111
+        repository = self._create_clear_repository_with_1_record(user_id)
+        repository.create_new_condition(user_id)
+        expected = True
+        assert expected == repository.add_search_condition(
+            user_id, "age_from", 40)
+
+    def test_add_search_condition_age_from_failed(self):
+        user_id = 111
+        repository = self._create_clear_repository_with_1_record(user_id)
+        repository.create_new_condition(user_id)
+        expected = True
+        with pytest.raises(self.VKinderCannotUpdateSearchConditions) as e_info:
+            assert expected == repository.add_search_condition(
+                user_id, "age_from", 1.5)
+

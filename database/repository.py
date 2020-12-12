@@ -60,7 +60,7 @@ class Repository():
                 self._create_structure()
             self.connection_string = connection_string
             self.search_fields = \
-                {"sex": "sex", "age": "age_range"}
+                {"sex": "sex", "age": "age_range", "age_from": "age_range"}
         except Exception as e:
             raise self.VKinderCannotConnectToDBException(
                 "Cannot connect to DB: " + str(e))
@@ -153,8 +153,11 @@ class Repository():
         return True
 
     def update_search_condition(self, opened_condition_id: int, search_criteria: str, value: str):
-        if search_criteria[0:3] == "age":
+        if search_criteria == "age":
             value = "[" + str(value) + "," + str(value) + "]"
+        elif search_criteria == "age_from":
+            value = "[" + str(value) + ",999]"
+
         SQL = sqlalchemy.text(
             """update vkinder_search_conditions
                 set """ + self.search_fields[search_criteria] + """ = :value
