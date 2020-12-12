@@ -10,7 +10,8 @@ sys.path.append(os.path.abspath(os.path.join(
 
 class Repository():
     from exceptions.db_exceptions import \
-        VKinderCannotConnectToDBException, VKinderCannotInsert, VKinderCannotUPdateUserState
+        VKinderCannotConnectToDBException, VKinderCannotInsert, VKinderCannotUpdateUserState, \
+        VKinderCannotUpdateSearchConditions
 
     def _has_need_to_create(self):
         try:
@@ -58,6 +59,8 @@ class Repository():
                 self._drop_structure()
                 self._create_structure()
             self.connection_string = connection_string
+            self.search_fields = \
+                {"sex": "sex"}
         except Exception as e:
             raise self.VKinderCannotConnectToDBException(
                 "Cannot connect to DB: " + str(e))
@@ -81,6 +84,13 @@ class Repository():
 
     def __str__(self):
         return self.connection_string
+
+    def engine_execute(self, SQL, params: dict, exc: Exception, message: str):
+        try:
+            self.db_engine.execute(SQL, params)
+        except Exception as e:
+            raise exc(message + str(e))
+        return True
 
     def create_new_search_user(self, user_id: int, user_info: dict):
         SQL = sqlalchemy.text(
@@ -118,6 +128,46 @@ class Repository():
             select sex_id||' - '||sex_nm from spr_sexes order by 1""").fetchall()
         return result
 
+    def get_exists_opened_condition(self, user_id: int):
+        result = self.db_conn.execute("""
+            select id from vkinder_search_conditions
+             where id_search_user = %s
+                and is_open = true""", (user_id)).fetchone()
+        if result:
+            return result[0]
+        else:
+            return None
+
+    def create_new_condition(self, user_id: int):
+        SQL = sqlalchemy.text(
+            """insert into vkinder_search_conditions
+            (id_search_user , city, age_range, sex, relation )
+            values (:vk_id, '', '[0,999]', 0, 0)""")
+        params = {"vk_id": user_id}
+        try:
+            # self.db_conn.execute(SQL)
+            self.db_engine.execute(SQL, params)
+        except Exception as e:
+            raise self.VKinderCannotInsert(
+                f"Error during insert new search vonditios user with id {user_id} " + str(e))
+        return True
+
+    def update_search_condition(self, opened_condition_id: int, search_criteria: str, value: str):
+        SQL = sqlalchemy.text(
+            """update vkinder_search_conditions
+                set """ + self.search_fields[search_criteria] + """ = :value
+                where id = :opened_condition_id""")
+        params = {"value": value, "opened_condition_id": opened_condition_id}
+        return self.engine_execute(SQL, params, self.VKinderCannotUpdateSearchConditions,
+                                   f"Error during update search condition with id {opened_condition_id} ")
+
+    def add_search_condition(self, user_id: int, search_criteria: str, value: str):
+        opened_condition_id = self.get_exists_opened_condition(user_id)
+        if not opened_condition_id:
+            self.create_new_condition(user_id)
+            opened_condition_id = self.get_exists_opened_condition(user_id)
+        return self.update_search_condition(opened_condition_id, search_criteria, value)
+
     def _hard_reset(self):
         self._drop_structure()
         self._create_structure()
@@ -126,7 +176,8 @@ class Repository():
 if __name__ == "__main__":
     repository = Repository(
         'postgresql://vkinder:1@localhost:5432/vkinder', True)
-    print(repository.get_text_choose_sex())
+    print(repository.get_exists_opened_condition(111))
+    # print(repository.get_text_choose_sex())
     # repository._drop_structure()
     # repository._create_structure()
     # print(repository.get_repository_user())

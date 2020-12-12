@@ -7,5 +7,9 @@ class VKinderCannotInsert(Exception):
     pass
 
 
-class VKinderCannotUPdateUserState(Exception):
+class VKinderCannotUpdateUserState(Exception):
+    pass
+
+
+class VKinderCannotUpdateSearchConditions(Exception):
     pass

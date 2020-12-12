@@ -8,9 +8,18 @@ sys.path.append(os.path.abspath(os.path.join(
 
 class TestDBRepository():
     from exceptions.db_exceptions import \
-        VKinderCannotConnectToDBException, VKinderCannotInsert, VKinderCannotUPdateUserState
+        VKinderCannotConnectToDBException, VKinderCannotInsert, VKinderCannotUpdateUserState, VKinderCannotUpdateSearchConditions
     from database.repository import Repository
     good_connect = 'postgresql://vkinder:1@localhost:5432/vkinder'
+
+    def _create_clear_repository_with_1_record(self, user_id: int):
+        repository = self.Repository(self.good_connect)
+        repository._drop_structure()
+        repository._create_structure()
+        user_info = {"first_name": "first_name",
+                     "hometown": "hometown", "relation": 3}
+        repository.create_new_search_user(user_id, user_info)
+        return repository
 
     def test_connection_success(self):
         repository = self.Repository(self.good_connect)
@@ -77,3 +86,27 @@ class TestDBRepository():
         actual = [('0 - not specified',), ('1 - female',), ('2 - male',)]
         expected = repository.get_text_choose_sex()
         assert actual == expected
+
+    def test_create_new_condition(self):
+        user_id = 111
+        repository = self._create_clear_repository_with_1_record(user_id)
+        repository.create_new_condition(user_id)
+        actual = repository.get_exists_opened_condition(user_id)
+        non_expected = None
+        assert actual != non_expected
+
+    def test_add_search_condition_sex_succesfull(self):
+        user_id = 111
+        repository = self._create_clear_repository_with_1_record(user_id)
+        repository.create_new_condition(user_id)
+        expected = True
+        assert expected == repository.add_search_condition(user_id, "sex", 1)
+
+    def test_add_search_condition_sex_failed(self):
+        user_id = 111
+        repository = self._create_clear_repository_with_1_record(user_id)
+        repository.create_new_condition(user_id)
+        expected = True
+        with pytest.raises(self.VKinderCannotUpdateSearchConditions) as e_info:
+            assert expected == repository.add_search_condition(
+                user_id, "sex", 5)
