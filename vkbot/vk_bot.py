@@ -96,14 +96,23 @@ class VK_Bot():
     def _set_age_to(self, user_id: int):
         self._send_message(user_id, '__set_age_to()')
 
-    def _set_age(self, user_id: int):
-        self._send_message(user_id, '__set_age()')
+    def _ask_age(self, user_id: int, next_user_state: int):
+        if self.test_mode:
+            self._send_message(user_id, '_ask_age()')
+        self.repository.set_user_state(user_id, next_user_state)
+        self._send_message(user_id, 'Enter exact age:')
 
-    def _ask_sex(self, user_id: int, new_state: int):
+    def _set_age(self, user_id: int, entered_text):
+        if self.test_mode:
+            self._send_message(
+                user_id, f'__set_age(user_id={user_id},entered_text={entered_text})')
+        self.repository.add_search_condition(user_id, 'age', entered_text)
+
+    def _ask_sex(self, user_id: int, next_user_state: int):
         if self.test_mode:
             self._send_message(user_id, '_ask_sex()')
-        self.repository.set_user_state(user_id, new_state)
-        self._send_message(user_id, 'Введите искомый пол:')
+        self.repository.set_user_state(user_id, next_user_state)
+        self._send_message(user_id, 'Enter sex code for find:')
         sexes = self.repository.get_text_choose_sex()
         for sex in sexes:
             self._send_message(user_id, str(sex))
@@ -119,7 +128,7 @@ class VK_Bot():
          'new': ['erase search settings', _erase_search_settings, 0],
          'set age from': ['set minimal age for searching', _set_age_from, 2],
          'set age to': ['set maximum age for searching', _set_age_to, 3],
-         'set age': ['set exact age for searching', _set_age, 1],
+         'set age': ['set exact age for searching', _ask_age, 1],
          'set sex': ['set exact sex for searching', _ask_sex, 5]
          }
     known_inside_states = \

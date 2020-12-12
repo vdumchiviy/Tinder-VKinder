@@ -46,8 +46,10 @@ class Repository():
     def set_user_state(self, user_id: int, new_state: int):
         return self.repository.set_state_of_search_user(user_id, new_state)
 
+
     def get_text_choose_sex(self):
         return self.repository.get_text_choose_sex()
+
 
     def add_search_condition(self, user_id: int, search_criteria: str, value: str):
         self.repository.add_search_condition(user_id, search_criteria, value)
