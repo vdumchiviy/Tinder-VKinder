@@ -68,7 +68,7 @@ class Repository():
             from vkinder_search_user where vk_id = %s""", (user_id)).fetchone()
         return result[0]
 
-    def get_user_state_id(self, user_id: int):
+    def get_state_of_search_user(self, user_id: int):
         result = self.db_conn.execute("""
             select user_state from vkinder_search_user where vk_id = %s""", (user_id)).fetchone()
         return result[0]
@@ -99,7 +99,7 @@ class Repository():
                 f"Error during insert new search user with id {user_id} " + str(e))
         return True
 
-    def update_state_search_user(self, user_id: int, new_state: int):
+    def set_state_of_search_user(self, user_id: int, new_state: int):
         SQL = sqlalchemy.text(
             """update vkinder_search_user
             set user_state = :user_state
@@ -113,10 +113,20 @@ class Repository():
                 f"Error during update user state {new_state} of search user with id {user_id} " + str(e))
         return True
 
+    def get_text_choose_sex(self):
+        result = self.db_conn.execute("""
+            select sex_id||' - '||sex_nm from spr_sexes order by 1""").fetchall()
+        return result
+
+    def _hard_reset(self):
+        self._drop_structure()
+        self._create_structure()
+
 
 if __name__ == "__main__":
     repository = Repository(
         'postgresql://vkinder:1@localhost:5432/vkinder', True)
+    print(repository.get_text_choose_sex())
     # repository._drop_structure()
     # repository._create_structure()
     # print(repository.get_repository_user())

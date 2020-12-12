@@ -58,7 +58,7 @@ class TestDBRepository():
         user_info = {"first_name": "first_name",
                      "hometown": "hometown", "relation": 3}
         repository.create_new_search_user(user_id, user_info)
-        assert repository.get_user_state_id(user_id) == 0
+        assert repository.get_state_of_search_user(user_id) == 0
 
     def test_update_status_change(self):
         repository = self.Repository(self.good_connect)
@@ -69,5 +69,11 @@ class TestDBRepository():
         user_info = {"first_name": "first_name",
                      "hometown": "hometown", "relation": 3}
         repository.create_new_search_user(user_id, user_info)
-        repository.update_state_search_user(user_id, excpected)
-        assert repository.get_user_state_id(user_id) == excpected
+        repository.set_state_of_search_user(user_id, excpected)
+        assert repository.get_state_of_search_user(user_id) == excpected
+
+    def test_get_text_choose_sex(self):
+        repository = self.Repository(self.good_connect)
+        actual = [('0 - not specified',), ('1 - female',), ('2 - male',)]
+        expected = repository.get_text_choose_sex()
+        assert actual == expected

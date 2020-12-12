@@ -41,7 +41,16 @@ class Repository():
         return self.repository.create_new_search_user(user_id, user_info)
 
     def get_user_state(self, user_id: int):
-        return self.repository.get_user_state_id(user_id)
+        return self.repository.get_state_of_search_user(user_id)
+
+    def set_user_state(self, user_id: int, new_state: int):
+        return self.repository.set_state_of_search_user(user_id, new_state)
+
+    def get_text_choose_sex(self):
+        return self.repository.get_text_choose_sex()
+
+    def _hard_reset(self):
+        self.repository._hard_reset()
 
 
 def a():

@@ -18,18 +18,21 @@ class VK_Bot():
     from exceptions.vk_bot_exceptions import VKBotNoTokenGiven
     from repository.repository import Repository
 
-    def __init__(self, token: str = ""):
+    def __init__(self, token: str = "", test_mode: bool = False):
         if token:
+            self.test_mode = test_mode
             self.vk_session = vk_api.VkApi(token=token)
             self.long_poll = VkLongPoll(self.vk_session)
             self.repository = self.Repository()
-
         else:
             raise self.VKBotNoTokenGiven(f"No token was given")
 
     def _send_message(self, user_id: int, message: str):
         self.vk_session.method('messages.send', {
             'user_id': user_id, 'message': message,  'random_id': randrange(10 ** 7), })
+
+    def _repository_hard_reset(self):
+        self.repository._hard_reset()
 
     def _get_age(self, date_str: str):
         try:
@@ -46,6 +49,9 @@ class VK_Bot():
         return age
 
     def _get_vk_user_information(self, user_id: int):
+        if self.test_mode:
+            self._send_message(
+                user_id, f'_get_vk_user_information(user_id = {user_id})')
         response = self.vk_session.method('users.get',
                                           {'user_id': user_id,
                                            'fields': 'first_name,last_name,sex,bdate,home_town,photo_50,relation'})
@@ -56,11 +62,22 @@ class VK_Bot():
         return result
 
     def _check_new_user(self, user_id: int):
+        if self.test_mode:
+            self._send_message(
+                user_id, f'__check_new_user(user_id = {user_id})')
         if self.repository.has_user_exists(user_id):
-            return True
+            result = True
         else:
             user_info = self._get_vk_user_information(user_id)
-            return self.repository.create_new_search_user(user_id, user_info)
+            if self.test_mode:
+                self._send_message(
+                    user_id, f'__check_new_user. user_info = {user_info})')
+            result = self.repository.create_new_search_user(user_id, user_info)
+
+        if self.test_mode:
+            self._send_message(
+                user_id, f'__check_new_user. result = {result})')
+        return result
 
     def get_user_state(self, user_id):
         self._check_new_user(user_id)
@@ -82,11 +99,19 @@ class VK_Bot():
     def _set_age(self, user_id: int):
         self._send_message(user_id, '__set_age()')
 
-    def _ask_sex(self, user_id: int):
-        self._send_message(user_id, '__set_sex()')
+    def _ask_sex(self, user_id: int, new_state: int):
+        if self.test_mode:
+            self._send_message(user_id, '_ask_sex()')
+        self.repository.set_user_state(user_id, new_state)
+        self._send_message(user_id, 'Введите искомый пол:')
+        sexes = self.repository.get_text_choose_sex()
+        for sex in sexes:
+            self._send_message(user_id, str(sex))
 
-    def _set_sex(self, user_id: int):
-        self._send_message(user_id, '__set_sex()')
+    def _set_sex(self, user_id: int, entered_text):
+        if self.test_mode:
+            self._send_message(
+                user_id, f'__set_sex(user_id={user_id},entered_text={entered_text})')
 
     known_commands = \
         {'search': ['search pair', _search_pair, 0],
@@ -97,7 +122,8 @@ class VK_Bot():
          'set sex': ['set exact sex for searching', _ask_sex, 5]
          }
     known_inside_states = \
-        {5: [_set_sex]}
+        {5: [_set_sex],
+         }
 
     def _get_known_command(self, input_command: str):
         try:
@@ -124,22 +150,23 @@ class VK_Bot():
                     request = event.text
                     if request == 'stop':
                         return
+                    self._check_new_user(event.user_id)
 
                     command = self._get_known_command(request)
                     if command:
                         self._send_message(event.user_id, str(command))
                         # description = command[0]
-                        # new_state = command[2]
+                        new_state = command[2]
                         func = command[1]
-                        func(self, event.user_id)
+                        func(self, event.user_id, new_state)
                     else:
                         current_user_state = self.repository.get_user_state(
                             event.user_id)
                         command_state = self._get_known_states(
-                            event.user_id, current_user_state)
+                            current_user_state)
                         if command_state:
                             func = command_state[0]
-                            func(self, event.user_id)
+                            func(self, event.user_id, request)
 
                         else:
                             self._send_message(
@@ -172,8 +199,9 @@ if __name__ == "__main__":
     # birth = datetime.datetime.strptime('11.17', '%d.%m.%Y').date()
     # age = calculate_age(birth)
     # print(age)
-    vk_bot = VK_Bot(get_vk_token())
-    print(vk_bot._check_new_user(35163310))
+    vk_bot = VK_Bot(get_vk_token(), test_mode=True)
+    vk_bot._repository_hard_reset()
+    # print(vk_bot._check_new_user(35163310))
     # print(vk_bot._get_vk_user_information(3317276))
     # print(vk_bot._get_vk_user_information(1749874))
-    # vk_bot.conversation()
+    vk_bot.conversation()
