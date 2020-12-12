@@ -107,6 +107,7 @@ class VK_Bot():
             self._send_message(
                 user_id, f'__set_age(user_id={user_id},entered_text={entered_text})')
         self.repository.add_search_condition(user_id, 'age', entered_text)
+        self.repository.set_user_state(user_id, 0)
 
     def _ask_sex(self, user_id: int, next_user_state: int):
         if self.test_mode:
@@ -122,6 +123,7 @@ class VK_Bot():
             self._send_message(
                 user_id, f'__set_sex(user_id={user_id},entered_text={entered_text})')
         self.repository.add_search_condition(user_id, 'sex', entered_text)
+        self.repository.set_user_state(user_id, 0)
 
     known_commands = \
         {'search': ['search pair', _search_pair, 0],
@@ -133,6 +135,7 @@ class VK_Bot():
          }
     known_inside_states = \
         {5: [_set_sex],
+         1: [_set_age]
          }
 
     def _get_known_command(self, input_command: str):
