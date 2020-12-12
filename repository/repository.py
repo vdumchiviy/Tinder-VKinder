@@ -10,7 +10,7 @@ class Repository():
 
     def __init__(self, mode: str = "postgresql",
                  settings: dict = {'host': 'localhost', 'port': 5432, 'base': 'vkinder',
-                                   'user': 'vkinder', 'password': '1'}):
+                                   'user': 'vkinder', 'password': '1'}, test_mode: bool = False):
         from exceptions.repository_exceptions import VKinderModeNotFoundException
 
         self.mode = mode
@@ -19,7 +19,7 @@ class Repository():
             self.connection_string = \
                 f'{mode}://{settings["user"]}:{settings["password"]}' \
                 + f'@{settings["host"]}:{settings["port"]}/{settings["base"]}'
-            self.repository = Repository(self.connection_string)
+            self.repository = Repository(self.connection_string, test_mode)
         else:
             raise VKinderModeNotFoundException(
                 f"Repository's mode not found: {mode:}")
@@ -48,6 +48,9 @@ class Repository():
 
     def get_text_choose_sex(self):
         return self.repository.get_text_choose_sex()
+
+    def add_search_condition(self, user_id: int, search_criteria: str, value: str):
+        self.repository.add_search_condition(user_id, search_criteria, value)
 
     def _hard_reset(self):
         self.repository._hard_reset()

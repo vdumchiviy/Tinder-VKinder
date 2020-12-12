@@ -112,6 +112,7 @@ class VK_Bot():
         if self.test_mode:
             self._send_message(
                 user_id, f'__set_sex(user_id={user_id},entered_text={entered_text})')
+        self.repository.add_search_condition(user_id, 'sex', entered_text)
 
     known_commands = \
         {'search': ['search pair', _search_pair, 0],
