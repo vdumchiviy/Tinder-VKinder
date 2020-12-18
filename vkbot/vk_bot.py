@@ -87,8 +87,10 @@ class VK_Bot():
         self.repository.check_new_user(user_id)
         self._send_message(user_id, '_search_pair()')
 
-    def _erase_search_settings(self, user_id: int):
-        self._send_message(user_id, '_erase_search_settings()')
+    def _erase_search_settings(self, user_id: int, next_user_state: int):
+        if self.test_mode:
+            self._send_message(user_id, '_erase_search_settings()')
+        self.repository.set_user_state(user_id, next_user_state)
 
     def _ask_age_from(self, user_id: int, next_user_state: int):
         if self.test_mode:
