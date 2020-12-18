@@ -49,6 +49,9 @@ class Repository():
     def get_text_choose_sex(self):
         return self.repository.get_text_choose_sex()
 
+    def get_text_choose_relation(self):
+        return self.repository.get_text_choose_relation()
+
     def add_search_condition(self, user_id: int, search_criteria: str, value: str):
         self.repository.add_search_condition(user_id, search_criteria, value)
 

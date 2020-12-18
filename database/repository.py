@@ -129,6 +129,11 @@ class Repository():
             select sex_id||' - '||sex_nm from spr_sexes order by 1""").fetchall()
         return result
 
+    def get_text_choose_relation(self):
+        result = self.db_conn.execute("""
+            select relation_id||' - '||relation_nm from spr_relations order by 1""").fetchall()
+        return result
+
     def get_exists_opened_condition(self, user_id: int):
         result = self.db_conn.execute("""
             select id from vkinder_search_conditions

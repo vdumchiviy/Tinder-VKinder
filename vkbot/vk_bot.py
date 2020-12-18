@@ -152,7 +152,7 @@ class VK_Bot():
             self._send_message(user_id, '_ask_relation()')
         self.repository.set_user_state(user_id, next_user_state)
         self._send_message(user_id, 'Enter relation code for find:')
-        sexes = self.repository.get_text_choose_sex()
+        sexes = self.repository.get_text_choose_replation()
         for sex in sexes:
             self._send_message(user_id, str(sex))
 
