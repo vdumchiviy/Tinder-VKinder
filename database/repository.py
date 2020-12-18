@@ -72,6 +72,15 @@ class Repository():
             from vkinder_search_user where vk_id = %s""", (user_id)).fetchone()
         return result[0]
 
+    def has_user_condition_exists(self, user_id: int):
+        result = self.db_conn.execute("""
+            select (case when count(*) > 0 then true else false end) as res
+            from vkinder_search_conditions
+            where 1=1
+                and is_open = true
+                and vk_id = %s""", (user_id)).fetchone()
+        return result[0]
+
     def get_state_of_search_user(self, user_id: int):
         result = self.db_conn.execute("""
             select user_state from vkinder_search_user where vk_id = %s""", (user_id)).fetchone()

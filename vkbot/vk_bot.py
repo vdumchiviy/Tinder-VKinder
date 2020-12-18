@@ -83,9 +83,11 @@ class VK_Bot():
         self._check_new_user(user_id)
         return self.repository.get_user_state(user_id)
 
-    def _search_pair(self, user_id: int):
+    def _search_pair(self, user_id: int, next_user_state: int):
+        if self.test_mode:
+            self._send_message(user_id, '_search_pair()')
         self.repository.check_new_user(user_id)
-        self._send_message(user_id, '_search_pair()')
+        self.repository.has_user_condition_exists(user_id)
 
     def _erase_search_settings(self, user_id: int, next_user_state: int):
         if self.test_mode:
@@ -170,7 +172,7 @@ class VK_Bot():
          'set age to': ['set maximum age for searching', _ask_age_to, 3],
          'set age': ['set exact age for searching', _ask_age, 1],
          'set sex': ['set exact sex for searching', _ask_sex, 5],
-         'set relation': ['set relation forsearching', _ask_relation, 8]
+         'set relation': ['set relation for searching', _ask_relation, 8]
 
          }
     known_inside_states = \
