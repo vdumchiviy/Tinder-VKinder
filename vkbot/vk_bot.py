@@ -103,8 +103,18 @@ class VK_Bot():
         self.repository.add_search_condition(user_id, 'age_from', entered_text)
         self.repository.set_user_state(user_id, 0)
 
-    def _set_age_to(self, user_id: int):
-        self._send_message(user_id, '__set_age_to()')
+    def _ask_age_to(self, user_id: int, next_user_state: int):
+        if self.test_mode:
+            self._send_message(user_id, '_ask_age_to()')
+        self.repository.set_user_state(user_id, next_user_state)
+        self._send_message(user_id, 'Enter age till:')
+
+    def _set_age_to(self, user_id: int, entered_text):
+        if self.test_mode:
+            self._send_message(
+                user_id, f'__set_age_to(user_id={user_id},entered_text={entered_text})')
+        self.repository.add_search_condition(user_id, 'age_to', entered_text)
+        self.repository.set_user_state(user_id, 0)
 
     def _ask_age(self, user_id: int, next_user_state: int):
         if self.test_mode:
@@ -139,13 +149,15 @@ class VK_Bot():
         {'search': ['search pair', _search_pair, 0],
          'new': ['erase search settings', _erase_search_settings, 0],
          'set age from': ['set minimal age for searching', _ask_age_from, 2],
-         'set age to': ['set maximum age for searching', _set_age_to, 3],
+         'set age to': ['set maximum age for searching', _ask_age_to, 3],
          'set age': ['set exact age for searching', _ask_age, 1],
          'set sex': ['set exact sex for searching', _ask_sex, 5]
          }
     known_inside_states = \
         {5: [_set_sex],
-         1: [_set_age]
+         1: [_set_age],
+         2: [_set_age_from],
+         3: [_set_age_to]
          }
 
     def _get_known_command(self, input_command: str):
