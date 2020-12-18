@@ -145,19 +145,38 @@ class VK_Bot():
         self.repository.add_search_condition(user_id, 'sex', entered_text)
         self.repository.set_user_state(user_id, 0)
 
+    def _ask_relation(self, user_id: int, next_user_state: int):
+        if self.test_mode:
+            self._send_message(user_id, '_ask_relation()')
+        self.repository.set_user_state(user_id, next_user_state)
+        self._send_message(user_id, 'Enter relation code for find:')
+        sexes = self.repository.get_text_choose_sex()
+        for sex in sexes:
+            self._send_message(user_id, str(sex))
+
+    def _set_relation(self, user_id: int, entered_text):
+        if self.test_mode:
+            self._send_message(
+                user_id, f'__set_relation(user_id={user_id},entered_text={entered_text})')
+        self.repository.add_search_condition(user_id, 'relation', entered_text)
+        self.repository.set_user_state(user_id, 0)
+
     known_commands = \
         {'search': ['search pair', _search_pair, 0],
          'new': ['erase search settings', _erase_search_settings, 0],
          'set age from': ['set minimal age for searching', _ask_age_from, 2],
          'set age to': ['set maximum age for searching', _ask_age_to, 3],
          'set age': ['set exact age for searching', _ask_age, 1],
-         'set sex': ['set exact sex for searching', _ask_sex, 5]
+         'set sex': ['set exact sex for searching', _ask_sex, 5],
+         'set relation': ['set relation forsearching', _ask_relation, 8]
+
          }
     known_inside_states = \
         {5: [_set_sex],
          1: [_set_age],
          2: [_set_age_from],
-         3: [_set_age_to]
+         3: [_set_age_to],
+         8: [_set_relation]
          }
 
     def _get_known_command(self, input_command: str):
