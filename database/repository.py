@@ -99,7 +99,7 @@ class Repository():
             (vk_id, first_name, second_name, city, age, sex, relation, user_state)
             values (:vk_id, :first_name, :second_name, :city, :age, :sex, :relation, :user_state)""")
         params = {"vk_id": user_id, "first_name": user_info.get("first_name"),
-                  "second_name": user_info.get("second_name"), "city": user_info.get("hometown"),
+                  "second_name": user_info.get("last_name"), "city": user_info.get("hometown"),
                   "age": user_info.get("age"), "sex": user_info.get("sex"),
                   "relation": user_info.get("relation"), "user_state": 0}
         try:
