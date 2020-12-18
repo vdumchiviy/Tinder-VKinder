@@ -40,6 +40,9 @@ class Repository():
     def has_user_condition_exists(self, user_id: int):
         return self.repository.has_user_condition_exists(user_id)
 
+    def get_search_conditions(self, user_id: int):
+        self.repository.get_search_conditions(user_id)
+
     def create_new_search_user(self, user_id: int, user_info: dict):
         return self.repository.create_new_search_user(user_id, user_info)
 

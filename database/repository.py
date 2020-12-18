@@ -86,6 +86,29 @@ class Repository():
             select user_state from vkinder_search_user where vk_id = %s""", (user_id)).fetchone()
         return result[0]
 
+    def get_search_conditions(self, user_id: int):
+        request = self.db_conn.execute("""
+            select
+                'city', city,
+                'age_from', lower(age_range) as age_from,
+                'age_to', upper(age_range) as age_to,
+                'sex', sex,
+                'relation', relation
+            from vkinder_search_conditions
+            where 1 = 1
+                and is_open = true
+                and id_search_user = %s""", (user_id)).fetchone()
+        if not request:
+            return None
+        result = dict()
+        result[request[0]] = request[1]
+        result[request[2]] = request[3]
+        result[request[4]] = request[5]
+        result[request[6]] = request[7]
+        result[request[8]] = request[9]
+
+        return result
+
     def _get_current_schema(self):
         return self.db_conn.execute("select current_schema()").fetchall()
 

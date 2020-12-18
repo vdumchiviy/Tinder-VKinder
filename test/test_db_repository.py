@@ -183,3 +183,14 @@ class TestDBRepository():
         with pytest.raises(self.VKinderCannotUpdateSearchConditions):
             assert expected == repository.add_search_condition(
                 user_id, "relation", 15)
+
+    def test_get_search_conditions(self):
+        user_id = 111
+        repository = self._create_clear_repository_with_1_record(user_id)
+        repository.create_new_condition(user_id)
+        repository.add_search_condition(user_id, "age", 55)
+
+        expected = {'age_from': 55, 'age_to': 56,
+                    'city': '', 'relation': 0, 'sex': 0}
+        actual = repository.get_search_conditions(user_id)
+        assert expected == actual

@@ -88,6 +88,7 @@ class VK_Bot():
             self._send_message(user_id, '_search_pair()')
         self.repository.check_new_user(user_id)
         self.repository.has_user_condition_exists(user_id)
+        conditions = self.repository.get_search_conditions(user_id)
 
     def _erase_search_settings(self, user_id: int, next_user_state: int):
         if self.test_mode:
