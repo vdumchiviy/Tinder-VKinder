@@ -4,6 +4,8 @@ insert into spr_user_states(user_state_id, user_state_nm) values (2, 'waiting fo
 insert into spr_user_states(user_state_id, user_state_nm) values (3, 'waiting for to age numbers');
 insert into spr_user_states(user_state_id, user_state_nm) values (5, 'waiting for sex numbers');
 insert into spr_user_states(user_state_id, user_state_nm) values (8, 'waiting for relation numbers');
+insert into spr_user_states(user_state_id, user_state_nm) values (11, 'request for add_to_pair_answer');
+insert into spr_user_states(user_state_id, user_state_nm) values (15, 'waiting add_to_pair_answer');
 insert into spr_relations(relation_id, relation_nm) values (0,'not specified');
 insert into spr_relations(relation_id, relation_nm) values (1,'single');
 insert into spr_relations(relation_id, relation_nm) values (2,'in a relationship');

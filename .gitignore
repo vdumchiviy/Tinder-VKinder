@@ -21,3 +21,4 @@ resources/vktoken.ini
 vkbot/__pycache__/__init__.cpython-37.pyc
 vkbot/__pycache__/vk_bot.cpython-37.pyc
 basic_code.py
+resources/vkuser_key.ini

@@ -13,3 +13,15 @@ class VKinderCannotUpdateUserState(Exception):
 
 class VKinderCannotUpdateSearchConditions(Exception):
     pass
+
+
+class VKinderCannotInsertSearchedResults(Exception):
+    pass
+
+
+class VKinderCannotAddNewPair(Exception):
+    pass
+
+
+class VKinderCannotUPdateIsOfferedStatusOfPair(Exception):
+    pass

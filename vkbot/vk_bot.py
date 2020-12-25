@@ -18,11 +18,12 @@ class VK_Bot():
     from exceptions.vk_bot_exceptions import VKBotNoTokenGiven
     from repository.repository import Repository
 
-    def __init__(self, token: str = "", test_mode: bool = False):
-        if token:
+    def __init__(self, token: str = "", vkuser_token: str = "", test_mode: bool = False):
+        if token and vkuser_token:
             self.test_mode = test_mode
             self.vk_session = vk_api.VkApi(token=token)
             self.long_poll = VkLongPoll(self.vk_session)
+            self.vkuser_session = vk_api.VkApi(token=vkuser_token)
             self.repository = self.Repository()
         else:
             raise self.VKBotNoTokenGiven(f"No token was given")
@@ -83,12 +84,41 @@ class VK_Bot():
         self._check_new_user(user_id)
         return self.repository.get_user_state(user_id)
 
+    def _search_pair_with_conditions(user_id: int, conditions: dict):
+        pass
+
     def _search_pair(self, user_id: int, next_user_state: int):
         if self.test_mode:
             self._send_message(user_id, '_search_pair()')
-        self.repository.check_new_user(user_id)
+        self._check_new_user(user_id)
         self.repository.has_user_condition_exists(user_id)
         conditions = self.repository.get_search_conditions(user_id)
+        # self._search_pair_with_conditions(user_id, conditions)
+        # params = {'user_id': user_id}
+        params = dict()
+        params['count'] = 5
+        params['fields'] = 'first_name,last_name,sex,bdate,home_town,photo_50,relation'
+        params['sex'] = conditions['sex']
+        params['status'] = conditions['relation']
+        params['age_from'] = conditions['age_from']
+        params['age_to'] = conditions['age_to']
+        if conditions.get('city'):
+            params['hometown'] = conditions['city']
+
+        search_result = self.vkuser_session.method('users.search', params)
+        if not search_result:
+            self._send_message(
+                user_id, 'Поиск не дал результатов, попробуйте изменить условия.')
+            return None
+        results_to_save = search_result["items"]
+        for item in results_to_save:
+            item['age'] = self._get_age(item['bdate'])
+            item['city'] = item['home_town']
+        result = self.repository.save_search_result(user_id, results_to_save)
+        self.repository.set_user_state(user_id, next_user_state)
+        result = self._ask_pair(user_id)
+
+        return result
 
     def _erase_search_settings(self, user_id: int, next_user_state: int):
         if self.test_mode:
@@ -166,8 +196,35 @@ class VK_Bot():
         self.repository.add_search_condition(user_id, 'relation', entered_text)
         self.repository.set_user_state(user_id, 0)
 
+    def _print_pair(self, user_id: int, pair: dict):
+        self._send_message(user_id, str(pair))
+
+    def _ask_pair(self, user_id: int):
+        pair = self.repository.get_next_saved_pair(user_id)
+        if not pair:
+            self.repository.set_user_state(user_id, 0)
+            return None
+        self._print_pair(user_id, pair)
+        self._send_message(user_id, "Add user to favorite? (y/n)")
+        self.repository.set_user_state(user_id, 15)
+
+    def _set_pair(self, user_id: int, entered_text: str):
+        if entered_text == 'y':
+            self.repository.add_pair(user_id)
+            self.repository.set_last_pair_to_offered_status(user_id)
+            self.repository.set_user_state(user_id, 11)
+            self._ask_pair(user_id)
+        elif entered_text == 'n':
+            self._send_message(user_id, "Pair wasn't added")
+            self.repository.set_last_pair_to_offered_status(user_id)
+            self.repository.set_user_state(user_id, 11)
+            self._ask_pair(user_id)
+        else:
+            self._send_message(user_id, "=Unknown choise=")
+            self._send_message(user_id, "Add user to favorite? (y/n)")
+
     known_commands = \
-        {'search': ['search pair', _search_pair, 0],
+        {'search': ['search pair', _search_pair, 11],
          'new': ['erase search settings', _erase_search_settings, 0],
          'set age from': ['set minimal age for searching', _ask_age_from, 2],
          'set age to': ['set maximum age for searching', _ask_age_to, 3],
@@ -181,7 +238,8 @@ class VK_Bot():
          1: [_set_age],
          2: [_set_age_from],
          3: [_set_age_to],
-         8: [_set_relation]
+         8: [_set_relation],
+         15: [_set_pair]
          }
 
     def _get_known_command(self, input_command: str):
@@ -233,9 +291,9 @@ class VK_Bot():
                             self._show_known_commands(event.user_id)
 
 
-def get_vk_token():
+def get_vk_token(file_name_with_token: str):
     path = os.path.abspath(os.path.join(
-        os.path.abspath(os.path.realpath(".")), "resources", "vkinder_key.ini"))
+        os.path.abspath(os.path.realpath(".")), "resources", file_name_with_token))
     with open(path, "r") as file:
         return file.read()
 
@@ -258,7 +316,8 @@ if __name__ == "__main__":
     # birth = datetime.datetime.strptime('11.17', '%d.%m.%Y').date()
     # age = calculate_age(birth)
     # print(age)
-    vk_bot = VK_Bot(get_vk_token(), test_mode=True)
+    vk_bot = VK_Bot(get_vk_token("vkinder_key.ini"),
+                    get_vk_token("vkuser_key.ini"), test_mode=True)
     vk_bot._repository_hard_reset()
     # print(vk_bot._check_new_user(35163310))
     # print(vk_bot._get_vk_user_information(3317276))

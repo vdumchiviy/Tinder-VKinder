@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS vkinder_search_user, vkinder_search_conditions, vkinder_pair, vkinder_photos, spr_relations, spr_sexes, spr_user_states CASCADE;
+DROP TABLE IF EXISTS vkinder_search_user, vkinder_search_conditions, vkinder_searched_pairs, vkinder_pair, vkinder_photos, spr_relations, spr_sexes, spr_user_states CASCADE;

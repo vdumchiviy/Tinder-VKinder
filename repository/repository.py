@@ -41,7 +41,7 @@ class Repository():
         return self.repository.has_user_condition_exists(user_id)
 
     def get_search_conditions(self, user_id: int):
-        self.repository.get_search_conditions(user_id)
+        return self.repository.get_search_conditions(user_id)
 
     def create_new_search_user(self, user_id: int, user_info: dict):
         return self.repository.create_new_search_user(user_id, user_info)
@@ -62,7 +62,19 @@ class Repository():
         self.repository.add_search_condition(user_id, search_criteria, value)
 
     def _hard_reset(self):
-        self.repository._hard_reset()
+        return self.repository._hard_reset()
+
+    def save_search_result(self, user_id: int, results_to_save: list):
+        return self.repository.save_search_result(user_id, results_to_save)
+
+    def get_next_saved_pair(self, user_id: int):
+        return self.repository.get_next_saved_pair(user_id)
+
+    def set_last_pair_to_offered_status(self, user_id: int):
+        return self.repository.set_last_pair_to_offered_status(user_id)
+
+    def add_pair(self, user_id: int):
+        return self.repository.add_pair(user_id)
 
 
 def a():

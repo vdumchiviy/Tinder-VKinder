@@ -44,6 +44,25 @@ CREATE TABLE IF NOT EXISTS vkinder_search_conditions
 	relation integer REFERENCES spr_relations(relation_id), --relation
 	is_open boolean default True -- condition now in use
 );
+--pairs were founded, but search_user didn't choice them 
+CREATE TABLE IF NOT EXISTS vkinder_searched_pairs
+(
+	id serial primary key, -- record id
+	is_offered boolean default False, --is that pair was offered to user?
+	id_search_condition integer REFERENCES vkinder_search_conditions(id), --the user from whom the search will be conducted 
+	id_pair integer, --id VKontakte (pair)
+	first_name varchar(100), --pair's Family name
+	second_name varchar(100), --pair's name
+	age integer, --age of pair
+	sex integer REFERENCES spr_sexes(sex_id), --sex id of pair 
+	city varchar(100), --pair's city
+	relation integer REFERENCES spr_relations(relation_id), --pair's relation
+	photo1 varchar(500), --link to the photo1,
+	photo2 varchar(500), --link to the photo2,
+	photo3 varchar(500), --link to the photo3,
+		CONSTRAINT UQ_COND_ID_USR unique (id_search_condition, id_pair) --the same pair can be only once in each search condition
+);
+
 --the user was founded 
 CREATE TABLE IF NOT EXISTS vkinder_pair
 (
