@@ -12,7 +12,8 @@ class Repository():
     from exceptions.db_exceptions import \
         VKinderCannotConnectToDBException, VKinderCannotInsert, VKinderCannotUpdateUserState, \
         VKinderCannotUpdateSearchConditions, VKinderCannotInsertSearchedResults, VKinderCannotAddNewPair, \
-        VKinderCannotUPdateIsOfferedStatusOfPair
+        VKinderCannotUpdateIsOfferedStatusOfPair, VKinderCannotCloseExistingSearchCondition, \
+        VKinderCannotDeletePair
 
     def _has_need_to_create(self):
         try:
@@ -154,7 +155,7 @@ class Repository():
             # self.db_conn.execute(SQL)
             self.db_engine.execute(SQL, params)
         except Exception as e:
-            raise self.VKinderCannotUPdateUserState(
+            raise self.VKinderCannotUpdateUserState(
                 f"Error during update user state {new_state} of search user with id {user_id} " + str(e))
         return True
 
@@ -221,18 +222,25 @@ class Repository():
 
     def save_search_result(self, user_id: int, results_to_save: list):
         opened_condition_id = self.get_exists_opened_condition(user_id)
-
         for item in results_to_save:
             SQL = sqlalchemy.text(
                 """INSERT INTO vkinder_searched_pairs
                 (
                 id_search_condition, id_pair, first_name, second_name, age, sex, city, relation,
                 photo1 ,photo2, photo3
-                ) VALUES (
+                ) SELECT
                 :id_search_condition, :id_pair, :first_name, :second_name, :age, :sex, :city, :relation,
                 :photo1 , :photo2, :photo3
-                )""")
-            params = {"id_search_condition": opened_condition_id, "id_pair": item['id'],
+                WHERE NOT EXISTS
+                    (SELECT 1 FROM vkinder_pair
+                    WHERE id_search_user = :user_id
+                    AND id_pair = :id_pair)
+                AND NOT EXISTS
+                    (SELECT 1 FROM vkinder_blacklist_pair
+                    WHERE id_search_user = :user_id
+                    AND id_pair = :id_pair)
+                """)
+            params = {"user_id": user_id, "id_search_condition": opened_condition_id, "id_pair": item['id'],
                       "first_name": item.get("first_name"), "second_name": item.get("last_name"),
                       "age": item.get("age"), "sex": item.get("sex"), "city": item.get("city"),
                       "relation": item.get("relation"),
@@ -240,7 +248,6 @@ class Repository():
                       "photo2": ('' if item.get("photo2") is None else item.get("photo2")),
                       "photo3": ('' if item.get("photo3") is None else item.get("photo3"))
                       }
-
             self.engine_execute(SQL, params, self.VKinderCannotInsertSearchedResults,
                                 f"Error during insert searched results, condition id {opened_condition_id}, " +
                                 f"vk_user_id {item['id']}")
@@ -278,6 +285,68 @@ class Repository():
         result[request[14]] = request[15]
         return result
 
+    def get_all_pairs(self, user_id: int):
+        request = self.db_conn.execute("""
+            select
+                'id_pair', id_pair,
+                'first_name', first_name,
+                'second_name', second_name,
+                'age', age,
+                'sex', sex,
+                'city', city,
+                'relation', relation,
+                'avatar', ''
+            from vkinder_pair
+            where 1 = 1
+                and id_search_user = %s
+            order by id asc""", (user_id)).fetchall()
+        if not request:
+            return None
+        return_result = list()
+        for record in request:
+            result = dict()
+            result[record[0]] = record[1]
+            result[record[2]] = record[3]
+            result[record[4]] = record[5]
+            result[record[6]] = record[7]
+            result[record[8]] = record[9]
+            result[record[10]] = record[11]
+            result[record[12]] = record[13]
+            result[record[14]] = record[15]
+            return_result.append(result)
+        return return_result
+
+    def get_all_blacklist_pairs(self, user_id: int):
+        request = self.db_conn.execute("""
+            select
+                'id_pair', id_pair,
+                'first_name', first_name,
+                'second_name', second_name,
+                'age', age,
+                'sex', sex,
+                'city', city,
+                'relation', relation,
+                'avatar', ''
+            from vkinder_blacklist_pair
+            where 1 = 1
+                and id_search_user = %s
+            order by id asc""", (user_id)).fetchall()
+        if not request:
+            return None
+        return_result = list()
+        for record in request:
+            result = dict()
+            result[record[0]] = record[1]
+            result[record[2]] = record[3]
+            result[record[4]] = record[5]
+            result[record[6]] = record[7]
+            result[record[8]] = record[9]
+            result[record[10]] = record[11]
+            result[record[12]] = record[13]
+            result[record[14]] = record[15]
+            return_result.append(result)
+        return return_result
+
     def set_last_pair_to_offered_status(self, user_id):
         opened_condition_id = self.get_exists_opened_condition(user_id)
         pair = self.get_next_saved_pair(user_id)
@@ -290,7 +359,7 @@ class Repository():
                 AND id = :saved_pair_id
             """)
         params = {"saved_pair_id": pair['saved_pair_id']}
-        self.engine_execute(SQL, params, self.VKinderCannotUPdateIsOfferedStatusOfPair,
+        self.engine_execute(SQL, params, self.VKinderCannotUpdateIsOfferedStatusOfPair,
                             f"Error during insert new pair, condition id {opened_condition_id}, " +
                             f"vk_user_id {user_id}, pair_id {pair['saved_pair_id']}")
 
@@ -315,13 +384,54 @@ class Repository():
                             f"Error during insert new pair, condition id {opened_condition_id}, " +
                             f"vk_user_id {user_id}, pair_id {pair['saved_pair_id']}")
 
+    def add_pair_to_blacklist(self, user_id: int):
+        opened_condition_id = self.get_exists_opened_condition(user_id)
+        pair = self.get_next_saved_pair(user_id)
+        if not pair:
+            return None
+        SQL = sqlalchemy.text(
+            """INSERT INTO vkinder_blacklist_pair
+            (
+            id_search_user, id_pair, first_name, second_name, age, sex, city, relation
+            )
+            SELECT
+            :user_id, id_pair, first_name, second_name, age, sex, city, relation
+            FROM vkinder_searched_pairs
+            WHERE 1 = 1
+                AND id = :saved_pair_id""")
+
+        params = {"user_id": user_id, "saved_pair_id": pair['saved_pair_id']}
+        self.engine_execute(SQL, params, self.VKinderCannotAddNewPair,
+                            f"Error during insert new pair, condition id {opened_condition_id}, " +
+                            f"vk_user_id {user_id}, pair_id {pair['saved_pair_id']}")
+
+    def begin_new_search_settings(self, user_id):
+        opened_condition_id = self.get_exists_opened_condition(user_id)
+        if not opened_condition_id:
+            return None
+        SQL = sqlalchemy.text(
+            """UPDATE vkinder_search_conditions SET is_open = false where id = :id""")
+        params = {"id": opened_condition_id}
+        self.engine_execute(SQL, params, self.VKinderCannotCloseExistingSearchCondition,
+                            f"Error during close existing search condition id {opened_condition_id}, " +
+                            f"vk_user_id {user_id}")
+
+    def delete_pair(self, user_id: int, pair_number: int):
+        SQL = sqlalchemy.text(
+            """DELETE FROM vkinder_pair WHERE id_search_user = :user_id AND id_pair = :pair_number""")
+        params = {"user_id": user_id, "pair_number": pair_number}
+        return self.engine_execute(SQL, params, self.VKinderCannotDeletePair,
+                                   f"Error during delete existing pair id {pair_number}, " +
+                                   f"vk_user_id {user_id}")
+
 
 if __name__ == "__main__":
     repository = Repository(
         'postgresql://vkinder:1@localhost:5432/vkinder', True)
     # print(repository.get_exists_opened_condition(111))
     # print(repository.get_text_choose_sex())
-    repository._drop_structure()
-    repository._create_structure()
+    # repository._drop_structure()
+    # repository._create_structure()
     # print(repository.get_repository_user())
     # print(repository.has_user_exists(4))
+    repository.get_all_pairs(35163310)

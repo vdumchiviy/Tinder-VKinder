@@ -106,23 +106,27 @@ class VK_Bot():
             params['hometown'] = conditions['city']
 
         search_result = self.vkuser_session.method('users.search', params)
-        if not search_result:
+
+        results_to_save = search_result["items"]
+
+        if not results_to_save:
             self._send_message(
                 user_id, 'Поиск не дал результатов, попробуйте изменить условия.')
             return None
-        results_to_save = search_result["items"]
+
         for item in results_to_save:
             item['age'] = self._get_age(item['bdate'])
-            item['city'] = item['home_town']
+            item['city'] = item.get('home_town')
         result = self.repository.save_search_result(user_id, results_to_save)
         self.repository.set_user_state(user_id, next_user_state)
         result = self._ask_pair(user_id)
 
         return result
 
-    def _erase_search_settings(self, user_id: int, next_user_state: int):
+    def _begin_new_search_settings(self, user_id: int, next_user_state: int):
         if self.test_mode:
-            self._send_message(user_id, '_erase_search_settings()')
+            self._send_message(user_id, '_begin_new_search_settings()')
+        self.repository.begin_new_search_settings(user_id)
         self.repository.set_user_state(user_id, next_user_state)
 
     def _ask_age_from(self, user_id: int, next_user_state: int):
@@ -205,7 +209,7 @@ class VK_Bot():
             self.repository.set_user_state(user_id, 0)
             return None
         self._print_pair(user_id, pair)
-        self._send_message(user_id, "Add user to favorite? (y/n)")
+        self._send_message(user_id, "Add user ? (y)es / (n)o / to (b)lacklist / (c)ancel")
         self.repository.set_user_state(user_id, 15)
 
     def _set_pair(self, user_id: int, entered_text: str):
@@ -213,25 +217,65 @@ class VK_Bot():
             self.repository.add_pair(user_id)
             self.repository.set_last_pair_to_offered_status(user_id)
             self.repository.set_user_state(user_id, 11)
+            self._send_message(user_id, "Pair was added to blacklist")
             self._ask_pair(user_id)
         elif entered_text == 'n':
-            self._send_message(user_id, "Pair wasn't added")
             self.repository.set_last_pair_to_offered_status(user_id)
             self.repository.set_user_state(user_id, 11)
+            self._send_message(user_id, "Pair wasn't added")
+            self._ask_pair(user_id)
+        elif entered_text == 'b':
+            self.repository.add_pair_to_blacklist(user_id)
+            self.repository.set_last_pair_to_offered_status(user_id)
+            self.repository.set_user_state(user_id, 11)
+            self._send_message(user_id, "Pair was added to blacklist")
             self._ask_pair(user_id)
         else:
             self._send_message(user_id, "=Unknown choise=")
-            self._send_message(user_id, "Add user to favorite? (y/n)")
+            self._send_message(user_id, "Add user ? (y)es / (n)o / to (b)lacklist / (c)ancel")
+
+    def _show_all_pairs(self, user_id: int, next_user_state: int):
+        pairs = self.repository.get_all_pairs(user_id)
+        if pairs:
+            for pair in pairs:
+                self._print_pair(user_id, pair)
+        else:
+            self._send_message(user_id, "You haven't pairs")
+        self.repository.set_user_state(user_id, next_user_state)
+
+    def _show_all_blaclist_pairs(self, user_id: int, next_user_state: int):
+        pairs = self.repository.get_all_blacklist_pairs(user_id)
+        if pairs:
+            for pair in pairs:
+                self._print_pair(user_id, pair)
+        else:
+            self._send_message(user_id, "You haven't blaclist pairs")
+        self.repository.set_user_state(user_id, next_user_state)
+
+    def _ask_delete_pair(self, user_id: int, next_user_state: int):
+        self._send_message(
+            user_id, "Enter then number of pair what you want to delete:")
+        self.repository.set_user_state(user_id, next_user_state)
+
+    def _delete_pair(self, user_id: int, entered_text: str):
+        result = self.repository.delete_pair(user_id, entered_text)
+        if result:
+            self._send_message(user_id, f"Pair {entered_text} was deleted")
+        else:
+            self._send_message(user_id, f"Pair {entered_text} wasn't deleted")
+        return result
 
     known_commands = \
         {'search': ['search pair', _search_pair, 11],
-         'new': ['erase search settings', _erase_search_settings, 0],
+         'new': ['begin new search settings', _begin_new_search_settings, 0],
          'set age from': ['set minimal age for searching', _ask_age_from, 2],
          'set age to': ['set maximum age for searching', _ask_age_to, 3],
          'set age': ['set exact age for searching', _ask_age, 1],
          'set sex': ['set exact sex for searching', _ask_sex, 5],
-         'set relation': ['set relation for searching', _ask_relation, 8]
-
+         'set relation': ['set relation for searching', _ask_relation, 8],
+         'list': ['list all pairs', _show_all_pairs, 0],
+         'del': ['delete pair', _ask_delete_pair, 25],
+         'blacklist': ['list all blacklist pair', _show_all_blaclist_pairs, 0]
          }
     known_inside_states = \
         {5: [_set_sex],
@@ -239,7 +283,8 @@ class VK_Bot():
          2: [_set_age_from],
          3: [_set_age_to],
          8: [_set_relation],
-         15: [_set_pair]
+         15: [_set_pair],
+         25: [_delete_pair]
          }
 
     def _get_known_command(self, input_command: str):

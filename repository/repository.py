@@ -11,7 +11,7 @@ class Repository():
     def __init__(self, mode: str = "postgresql",
                  settings: dict = {'host': 'localhost', 'port': 5432, 'base': 'vkinder',
                                    'user': 'vkinder', 'password': '1'}, test_mode: bool = False):
-        from exceptions.repository_exceptions import VKinderModeNotFoundException
+        from exceptions.repository_exceptions import VKinderModeNotFoundException, VKinderCannotDeletePair
 
         self.mode = mode
         if mode == "postgresql":
@@ -75,6 +75,24 @@ class Repository():
 
     def add_pair(self, user_id: int):
         return self.repository.add_pair(user_id)
+
+    def add_pair_to_blacklist(self, user_id: int):
+        return self.repository.add_pair_to_blacklist(user_id)
+
+    def begin_new_search_settings(self, user_id: int):
+        return self.repository.begin_new_search_settings(user_id)
+
+    def get_all_pairs(self, user_id: int):
+        return self.repository.get_all_pairs(user_id)
+
+    def get_all_blacklist_pairs(self, user_id: int):
+        return self.repository.get_all_blacklist_pairs(user_id)
+
+    def delete_pair(self, user_id: int, pair_number: int):
+        try:
+            return self.repository.delete_pair(user_id, pair_number)
+        except self.VKinderCannotDeletePair:
+            return False
 
 
 def a():

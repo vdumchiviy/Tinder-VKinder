@@ -23,5 +23,13 @@ class VKinderCannotAddNewPair(Exception):
     pass
 
 
-class VKinderCannotUPdateIsOfferedStatusOfPair(Exception):
+class VKinderCannotUpdateIsOfferedStatusOfPair(Exception):
+    pass
+
+
+class VKinderCannotCloseExistingSearchCondition(Exception):
+    pass
+
+
+class VKinderCannotDeletePair(Exception):
     pass
