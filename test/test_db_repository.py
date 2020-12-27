@@ -194,3 +194,7 @@ class TestDBRepository():
                     'city': '', 'relation': 0, 'sex': 0}
         actual = repository.get_search_conditions(user_id)
         assert expected == actual
+
+
+if __name__ == "main":
+    pytest.main()

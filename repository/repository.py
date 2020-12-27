@@ -7,11 +7,11 @@ sys.path.append(os.path.abspath(os.path.join(
 
 
 class Repository():
+    from exceptions.repository_exceptions import VKinderModeNotFoundException, VKinderCannotDeletePair
 
     def __init__(self, mode: str = "postgresql",
                  settings: dict = {'host': 'localhost', 'port': 5432, 'base': 'vkinder',
                                    'user': 'vkinder', 'password': '1'}, test_mode: bool = False):
-        from exceptions.repository_exceptions import VKinderModeNotFoundException, VKinderCannotDeletePair
 
         self.mode = mode
         if mode == "postgresql":
@@ -21,7 +21,7 @@ class Repository():
                 + f'@{settings["host"]}:{settings["port"]}/{settings["base"]}'
             self.repository = Repository(self.connection_string, test_mode)
         else:
-            raise VKinderModeNotFoundException(
+            raise self.VKinderModeNotFoundException(
                 f"Repository's mode not found: {mode:}")
 
     def __str__(self):
@@ -72,6 +72,9 @@ class Repository():
 
     def set_last_pair_to_offered_status(self, user_id: int):
         return self.repository.set_last_pair_to_offered_status(user_id)
+
+    def set_all_pairs_to_offered_status(self, user_id: int):
+        return self.repository.set_all_pairs_to_offered_status(user_id)
 
     def add_pair(self, user_id: int):
         return self.repository.add_pair(user_id)

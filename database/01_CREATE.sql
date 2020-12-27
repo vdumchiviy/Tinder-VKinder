@@ -58,8 +58,11 @@ CREATE TABLE IF NOT EXISTS vkinder_searched_pairs
 	city varchar(100), --pair's city
 	relation integer REFERENCES spr_relations(relation_id), --pair's relation
 	photo1 varchar(500), --link to the photo1,
+	likes1 integer, --amount of likes of photo1,
 	photo2 varchar(500), --link to the photo2,
+	likes2 integer, --amount of likes of photo2,
 	photo3 varchar(500), --link to the photo3,
+	likes3 integer, --amount of likes of photo3
 		CONSTRAINT UQ_COND_ID_USR unique (id_search_condition, id_pair) --the same pair can be only once in each search condition
 );
 --the list of black pairs
@@ -94,7 +97,7 @@ CREATE TABLE IF NOT EXISTS vkinder_pair
 CREATE TABLE IF NOT EXISTS vkinder_photos
 (
 	id serial primary key, -- record id
-	id_pair integer REFERENCES vkinder_pair(id), --id pair
+	id_pair integer, --id pair
 	photo_link varchar(1000), -- URI of the photo
 	photo_likes integer -- count of likes fot that pphoto
 );

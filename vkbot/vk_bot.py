@@ -91,7 +91,9 @@ class VK_Bot():
         if self.test_mode:
             self._send_message(user_id, '_search_pair()')
         self._check_new_user(user_id)
-        self.repository.has_user_condition_exists(user_id)
+        if not self.repository.has_user_condition_exists(user_id):
+            self._send_message(user_id, "Search condition isn't exists")
+            return False
         conditions = self.repository.get_search_conditions(user_id)
         # self._search_pair_with_conditions(user_id, conditions)
         # params = {'user_id': user_id}
@@ -117,11 +119,32 @@ class VK_Bot():
         for item in results_to_save:
             item['age'] = self._get_age(item['bdate'])
             item['city'] = item.get('home_town')
+            item = self._get_user_photo_info(item['id'], item)
         result = self.repository.save_search_result(user_id, results_to_save)
         self.repository.set_user_state(user_id, next_user_state)
         result = self._ask_pair(user_id)
 
         return result
+
+    def _get_user_photo_info(self, pair_id: int, pair_info: dict):
+        params = {"user_id": pair_id, "album_id": 'profile',
+                  "extended": 1, "photo_sizes": 1, "rev": 1}
+        request = self.vkuser_session.method('photos.get', params)
+        if request['count'] != 0:
+            photos = request['items']
+            images = dict()
+            for photo in photos:
+                images[photo['sizes'][0]['url']] = photo['likes']['count']
+
+            images_list = list(images.items())
+            images_list.sort(key=lambda i: i[1], reverse=True)
+
+            three_or_less = (3 if len(images_list) >= 3 else len(images_list))
+            for i in range(three_or_less):
+                pair_info['photo'+str(i+1)] = images_list[i][0]
+                pair_info['likes'+str(i+1)] = images_list[i][1]
+
+        return pair_info
 
     def _begin_new_search_settings(self, user_id: int, next_user_state: int):
         if self.test_mode:
@@ -141,6 +164,7 @@ class VK_Bot():
                 user_id, f'__set_age_from(user_id={user_id},entered_text={entered_text})')
         self.repository.add_search_condition(user_id, 'age_from', entered_text)
         self.repository.set_user_state(user_id, 0)
+        self._send_message(user_id, f'Age min limit was setted')
 
     def _ask_age_to(self, user_id: int, next_user_state: int):
         if self.test_mode:
@@ -154,6 +178,7 @@ class VK_Bot():
                 user_id, f'__set_age_to(user_id={user_id},entered_text={entered_text})')
         self.repository.add_search_condition(user_id, 'age_to', entered_text)
         self.repository.set_user_state(user_id, 0)
+        self._send_message(user_id, f'Age max limit was setted')
 
     def _ask_age(self, user_id: int, next_user_state: int):
         if self.test_mode:
@@ -167,6 +192,7 @@ class VK_Bot():
                 user_id, f'__set_age(user_id={user_id},entered_text={entered_text})')
         self.repository.add_search_condition(user_id, 'age', entered_text)
         self.repository.set_user_state(user_id, 0)
+        self._send_message(user_id, f'Age was setted')
 
     def _ask_sex(self, user_id: int, next_user_state: int):
         if self.test_mode:
@@ -183,6 +209,7 @@ class VK_Bot():
                 user_id, f'__set_sex(user_id={user_id},entered_text={entered_text})')
         self.repository.add_search_condition(user_id, 'sex', entered_text)
         self.repository.set_user_state(user_id, 0)
+        self._send_message(user_id, f'Sex was setted')
 
     def _ask_relation(self, user_id: int, next_user_state: int):
         if self.test_mode:
@@ -199,6 +226,7 @@ class VK_Bot():
                 user_id, f'__set_relation(user_id={user_id},entered_text={entered_text})')
         self.repository.add_search_condition(user_id, 'relation', entered_text)
         self.repository.set_user_state(user_id, 0)
+        self._send_message(user_id, f'Relation was setted')
 
     def _print_pair(self, user_id: int, pair: dict):
         self._send_message(user_id, str(pair))
@@ -209,7 +237,8 @@ class VK_Bot():
             self.repository.set_user_state(user_id, 0)
             return None
         self._print_pair(user_id, pair)
-        self._send_message(user_id, "Add user ? (y)es / (n)o / to (b)lacklist / (c)ancel")
+        self._send_message(
+            user_id, "Add user ? (y)es / (n)o / to (b)lacklist / (c)ancel")
         self.repository.set_user_state(user_id, 15)
 
     def _set_pair(self, user_id: int, entered_text: str):
@@ -217,7 +246,7 @@ class VK_Bot():
             self.repository.add_pair(user_id)
             self.repository.set_last_pair_to_offered_status(user_id)
             self.repository.set_user_state(user_id, 11)
-            self._send_message(user_id, "Pair was added to blacklist")
+            self._send_message(user_id, "Pair was added")
             self._ask_pair(user_id)
         elif entered_text == 'n':
             self.repository.set_last_pair_to_offered_status(user_id)
@@ -230,9 +259,14 @@ class VK_Bot():
             self.repository.set_user_state(user_id, 11)
             self._send_message(user_id, "Pair was added to blacklist")
             self._ask_pair(user_id)
+        elif entered_text == 'c':
+            self.repository.set_all_pairs_to_offered_status(user_id)
+            self.repository.set_user_state(user_id, 0)
+            self._send_message(user_id, "Canceled")
         else:
             self._send_message(user_id, "=Unknown choise=")
-            self._send_message(user_id, "Add user ? (y)es / (n)o / to (b)lacklist / (c)ancel")
+            self._send_message(
+                user_id, "Add user ? (y)es / (n)o / to (b)lacklist / (c)ancel")
 
     def _show_all_pairs(self, user_id: int, next_user_state: int):
         pairs = self.repository.get_all_pairs(user_id)
@@ -332,7 +366,7 @@ class VK_Bot():
 
                         else:
                             self._send_message(
-                                event.user_id, "Неизвестная команда")
+                                event.user_id, "Unknown command")
                             self._show_known_commands(event.user_id)
 
 

@@ -23,7 +23,15 @@ class VKinderCannotAddNewPair(Exception):
     pass
 
 
+class VKinderCannotAddPhotosOfNewPair(Exception):
+    pass
+
+
 class VKinderCannotUpdateIsOfferedStatusOfPair(Exception):
+    pass
+
+
+class VKinderCannotUpdateIsOfferedStatusOfPairsCondition(Exception):
     pass
 
 
