@@ -124,10 +124,10 @@ class Repository():
     def engine_execute(self, SQL, params: dict, exc: Exception, message: str):
         try:
             with self.db_conn.begin():
-                self.db_engine.execute(SQL, params)
+                response = self.db_engine.execute(SQL, params)
+                return response.rowcount
         except Exception as e:
             raise exc(message + str(e))
-        return True
 
     def create_new_search_user(self, user_id: int, user_info: dict):
         SQL = sqlalchemy.text(
@@ -138,13 +138,8 @@ class Repository():
                   "second_name": user_info.get("last_name"), "city": user_info.get("home_town"),
                   "age": user_info.get("age"), "sex": user_info.get("sex"),
                   "relation": user_info.get("relation"), "user_state": 0}
-
-        try:
-            # self.db_conn.execute(SQL)
-            self.db_engine.execute(SQL, params)
-        except Exception as e:
-            raise self.VKinderCannotInsert(
-                f"Error during insert new search user with id {user_id} " + str(e))
+        self.engine_execute(SQL, params, self.VKinderCannotInsert,
+                            f"Error during insert new search user with id {user_id} ")
         return True
 
     def set_state_of_search_user(self, user_id: int, new_state: int):
@@ -153,12 +148,8 @@ class Repository():
             set user_state = :user_state
             where vk_id = :vk_id""")
         params = {"vk_id": user_id, "user_state": new_state}
-        try:
-            # self.db_conn.execute(SQL)
-            self.db_engine.execute(SQL, params)
-        except Exception as e:
-            raise self.VKinderCannotUpdateUserState(
-                f"Error during update user state {new_state} of search user with id {user_id} " + str(e))
+        self.engine_execute(SQL, params, self.VKinderCannotUpdateUserState,
+                            f"Error during update user state {new_state} of search user with id {user_id} ")
         return True
 
     def get_text_choose_sex(self):
@@ -187,12 +178,8 @@ class Repository():
             (id_search_user , city, age_range, sex, relation )
             values (:vk_id, '', '[0,127)', 0, 0)""")
         params = {"vk_id": user_id}
-        try:
-            # self.db_conn.execute(SQL)
-            self.db_engine.execute(SQL, params)
-        except Exception as e:
-            raise self.VKinderCannotInsert(
-                f"Error during insert new search vonditios user with id {user_id} " + str(e))
+        self.engine_execute(SQL, params, self.VKinderCannotInsert,
+                            f"Error during insert new search vonditios user with id {user_id} ")
         return True
 
     def update_search_condition(self, opened_condition_id: int, search_criteria: str, value: str):
@@ -208,8 +195,9 @@ class Repository():
                 set """ + self.search_fields[search_criteria] + """ = :value
                 where id = :opened_condition_id""")
         params = {"value": value, "opened_condition_id": opened_condition_id}
-        return self.engine_execute(SQL, params, self.VKinderCannotUpdateSearchConditions,
-                                   f"Error during update search condition with id {opened_condition_id} ")
+        self.engine_execute(SQL, params, self.VKinderCannotUpdateSearchConditions,
+                            f"Error during update search condition with id {opened_condition_id} ")
+        return True
 
     def add_search_condition(self, user_id: int, search_criteria: str, value: str):
         opened_condition_id = self.get_exists_opened_condition(user_id)
@@ -462,9 +450,10 @@ class Repository():
         SQL = sqlalchemy.text(
             """DELETE FROM vkinder_pair WHERE id_search_user = :user_id AND id_pair = :pair_number""")
         params = {"user_id": user_id, "pair_number": pair_number}
-        return self.engine_execute(SQL, params, self.VKinderCannotDeletePair,
+        rows = self.engine_execute(SQL, params, self.VKinderCannotDeletePair,
                                    f"Error during delete existing pair id {pair_number}, " +
                                    f"vk_user_id {user_id}")
+        return (True if rows != 0 else False)
 
 
 if __name__ == "__main__":

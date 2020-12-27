@@ -334,7 +334,11 @@ class VK_Bot():
             return None
 
     def _show_known_commands(self, user_id: int):
-        self._send_message(user_id, str(self.known_commands))
+        message = 'You can use:\n===============\n'
+        self._send_message(user_id, 'You can use:')
+        for command, item in self.known_commands.items():
+            message = message + f'{command}: {item[0]}\n'
+        self._send_message(user_id, message)
 
     def conversation(self):
 
