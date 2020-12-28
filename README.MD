@@ -19,7 +19,7 @@
 
 ----------------------
 ### How to run:
-#### The main file locates in folder 'vkbot\vk_bot.py'. Just run it. Make sure that you set test_mode to False and do comment line *vk_bot._repository_hard_reset()* in that file.
+#### The main file locates in folder 'vkbot\vk_bot.py'. Just run it. Make sure that you set test_mode to False and do comment line *vk_bot._repository_hard_reset()* in that file if you run it NOT in the first time.
 
 ----------------------
 ### For developers:
