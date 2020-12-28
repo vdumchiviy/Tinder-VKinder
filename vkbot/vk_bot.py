@@ -392,17 +392,7 @@ def calculate_age(birth_date):
 
 
 if __name__ == "__main__":
-    # path=os.path.abspath(os.path.join(
-    #     os.path.abspath(os.path.realpath("."), "resources", "vkinder_key.ini"))
-    # print(path)
-    # birth = datetime.datetime.strptime('07.12.1976', '%d.%m.%Y').date()
-    # birth = datetime.datetime.strptime('11.17', '%d.%m.%Y').date()
-    # age = calculate_age(birth)
-    # print(age)
     vk_bot = VK_Bot(get_vk_token("vkinder_key.ini"),
                     get_vk_token("vkuser_key.ini"), test_mode=True)
     vk_bot._repository_hard_reset()
-    # print(vk_bot._check_new_user(35163310))
-    # print(vk_bot._get_vk_user_information(3317276))
-    # print(vk_bot._get_vk_user_information(1749874))
     vk_bot.conversation()
